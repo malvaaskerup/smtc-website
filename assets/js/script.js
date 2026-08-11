@@ -112,9 +112,9 @@ docReady(function () {
 
 	// Only pages with a .content block and a data-page id fetch from Sanity —
 	// harmless no-op everywhere else.
-	if (contentEl && pageId && window.sanityClient) {
-		var client = sanityClient.createClient({
-			projectId: "ht2fy2ynh1skd36c37d5x7vd",
+	if (contentEl && pageId && window.SanityClient) {
+    var client = SanityClient.createClient({
+			projectId: "36u8ecaa",
 			dataset: "production",
 			apiVersion: "2024-01-01",
 			useCdn: true,
