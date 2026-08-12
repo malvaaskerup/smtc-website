@@ -150,6 +150,17 @@ docReady(function () {
 		// if neither is present yet, the fallback HTML already in the page stays as-is
 	}
 
+	// Swaps the visible text of any element with a data-eng attribute between
+	// its original Swedish text and that English translation.
+	function applyStaticTranslations(lang) {
+	document.querySelectorAll("[data-eng]").forEach(function (el) {
+		if (el.dataset.swe === undefined) {
+			el.dataset.swe = el.textContent; // cache the original Swedish text, once
+		}
+		el.textContent = lang === "eng" ? el.dataset.eng : el.dataset.swe;
+	});
+}
+
 	function renderGallery(items) {
 		if (!galleryEl || !items || !items.length) return;
 		galleryEl.innerHTML = items
@@ -179,10 +190,12 @@ docReady(function () {
 			var lang = button.dataset.lang; // "swe" or "eng"
 			localStorage.setItem("smtc-lang", lang);
 			renderContent(lang);
+			applyStaticTranslations(lang);
 		});
 	});
 
 	var initialLang = applyStoredLangToButtons();
+	applyStaticTranslations(initialLang);
 
 	if (window.SanityClient) {
 		var client = SanityClient.createClient({
