@@ -77,6 +77,17 @@ function addSoftBreaksAfterSlashes(container) {
   }
 }
 
+// Swaps the visible HTML of any element with a data-eng attribute between
+// its original Swedish version and that English translation.
+function applyStaticTranslations(lang) {
+  document.querySelectorAll("[data-eng]").forEach(function (el) {
+    if (el.dataset.swe === undefined) {
+      el.dataset.swe = el.innerHTML; // cache the original Swedish HTML, once
+    }
+    el.innerHTML = lang === "eng" ? el.dataset.eng : el.dataset.swe;
+  });
+}
+
 docReady(function () {
 
 	// ----- Lightbox: clicking any image inside .gallery or .page-gallery -----
@@ -150,31 +161,11 @@ docReady(function () {
 		// if neither is present yet, the fallback HTML already in the page stays as-is
 	}
 
-	// Swaps the visible text of any element with a data-eng attribute between
-	// its original Swedish text and that English translation.
-	function applyStaticTranslations(lang) {
-	document.querySelectorAll("[data-eng]").forEach(function (el) {
-		if (el.dataset.swe === undefined) {
-			el.dataset.swe = el.textContent; // cache the original Swedish text, once
-		}
-		el.textContent = lang === "eng" ? el.dataset.eng : el.dataset.swe;
-	});
-}
-
 	function renderGallery(items) {
 		if (!galleryEl || !items || !items.length) return;
 		galleryEl.innerHTML = items
 			.map(function (item) {
-				var caption = item.caption
-					? "<figcaption>" + escapeHtml(item.caption) + "</figcaption>"
-					: "<figcaption></figcaption>";
-				return (
-					'<figure><img src="' +
-					escapeHtml(item.imageUrl) +
-					'" alt="">' +
-					caption +
-					"</figure>"
-				);
+				return '<figure><img src="' + escapeHtml(item.imageUrl) + '" alt=""></figure>';
 			})
 			.join("\n");
 		// if no items come back yet, the hand-written <figure> tags already in the page stay as-is
@@ -220,7 +211,7 @@ docReady(function () {
 		if (galleryEl) {
 			client
 				.fetch(
-					'*[_type == "galleryImage"] | order(order asc){caption, "imageUrl": image.asset->url}'
+					'*[_type == "galleryImage"] | order(order asc){"imageUrl": image.asset->url}'
 				)
 				.then(function (items) {
 					renderGallery(items);
