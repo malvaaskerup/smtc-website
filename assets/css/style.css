@@ -452,11 +452,14 @@ p a[aria-current="page"] {
 
     :root {
         --header-height: 5.25rem;
+        --font-size-body: 18px;
+        --font-size-quote: 16px;
+        --font-size-caption: 14px;
     }
 
-      .menu {
-        position: sticky;
-        top: var(--sticky-offset);
+      .menu,
+      .site-nav {
+        position: static;
     }
 
         .page-gallery {
