@@ -246,10 +246,19 @@ p a[aria-current="page"] {
     vertical-align: -0.3em;
 }
 
+/* ---------- LANGUAGE SWITCH (top right, under header) ---------- */
+ 
 .lang-switch {
-    display: inline;
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    z-index: 21;
+ 
+    padding: 0.25rem;
+    font-size: var(--font-size-caption);
 }
-
+ 
 .lang-switch .lang-option {
     appearance: none;
     -webkit-appearance: none;
@@ -268,7 +277,7 @@ p a[aria-current="page"] {
     padding: 0;
     cursor: pointer;
 }
-
+ 
 .lang-switch .lang-option.lang-active {
     text-decoration: underline;
     text-underline-offset: 0.3em;
@@ -408,6 +417,10 @@ p a[aria-current="page"] {
 
 @media (max-width: 900px) {
 
+        :root {
+        --header-height: 6rem;
+    }
+
     .layout {
         flex-direction: column;
     }
@@ -440,8 +453,14 @@ p a[aria-current="page"] {
         width: 100%;
     }
 
-            .page-gallery {
+    .page-gallery {
         column-count: 2;
+    }
+
+    .lang-switch {
+        position: static;
+        transform: none;
+        margin-top: 0.5rem;
     }
 }
 
@@ -466,11 +485,10 @@ p a[aria-current="page"] {
         column-count: 1;
     }
 
-    .lang-switch {
-        display: block;
-        margin-top: 0.25rem;
-        white-space: nowrap;
-        overflow-wrap: normal;
-    }
+.lang-switch {
+    position: static;
+    transform: none;
+    margin-top: 0.5rem;
+}
 
 }
