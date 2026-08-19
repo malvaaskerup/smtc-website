@@ -247,18 +247,18 @@ p a[aria-current="page"] {
 }
 
 /* ---------- LANGUAGE SWITCH (top right, under header) ---------- */
- 
+
 .lang-switch {
     position: absolute;
     top: 50%;
     right: 1rem;
     transform: translateY(-50%);
     z-index: 21;
- 
+
     padding: 0.25rem;
     font-size: var(--font-size-caption);
 }
- 
+
 .lang-switch .lang-option {
     appearance: none;
     -webkit-appearance: none;
@@ -277,7 +277,7 @@ p a[aria-current="page"] {
     padding: 0;
     cursor: pointer;
 }
- 
+
 .lang-switch .lang-option.lang-active {
     text-decoration: underline;
     text-underline-offset: 0.3em;
@@ -411,6 +411,161 @@ p a[aria-current="page"] {
     color: var(--color-menu);
     font-weight: var(--font-weight-regular);
     line-height: 1;
+}
+
+/* ---------- BOOKING WIDGET (prices.html) ---------- */
+
+.booking {
+    flex: 1 1 100%;
+    max-width: var(--content-max-width);
+    margin-top: 1.5rem;
+}
+
+.booking form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 420px;
+}
+
+.booking label {
+    font-size: var(--font-size-caption);
+    margin-top: 0.5rem;
+}
+
+.booking select,
+.booking input,
+.booking textarea {
+    font: inherit;
+    font-size: var(--font-size-caption);
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--text-color);
+    border-radius: 0;
+    background: var(--background);
+    color: var(--text-color);
+}
+
+/* Scoped to the actual submit button by id, NOT ".booking button" — a plain
+   element selector there would (and did) also match the calendar's day
+   buttons and the month-nav arrows, and being more specific than .cal-day
+   it would silently win the cascade and override their color/sizing. */
+#booking-submit {
+    font: inherit;
+    font-size: var(--font-size-caption);
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-nav);
+    background: var(--color-nav);
+    color: #fff;
+    cursor: pointer;
+    width: fit-content;
+}
+
+#booking-submit:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.calendar {
+    margin-top: 0.5rem;
+    --calendar-line: #F61300;
+    --calendar-grey: #6A6A6C;
+    --calendar-box: 3.5rem;
+}
+
+.cal-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.cal-table th {
+    font-weight: var(--font-weight-regular);
+    font-size: var(--font-size-caption);
+    padding: 0.4rem 0;
+    border-bottom: 3px solid var(--calendar-line);
+    cursor: default;
+}
+
+.cal-table td {
+    border: 1px solid var(--calendar-line);
+    height: var(--calendar-box);
+    text-align: center;
+    vertical-align: middle;
+    padding: 0;
+}
+
+.cal-table td.cal-day--empty {
+    border-color: transparent;
+}
+
+.cal-day {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: var(--calendar-box);
+    margin: 0;
+    padding: 0;
+    font-size: var(--font-size-caption);
+    line-height: 1;
+    border: none;
+    background: transparent;
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+/* Unavailable — past dates, or the selected package's nights don't fit —
+   and already-booked dates both read as one solid grey block. */
+.cal-day:disabled,
+.cal-day--blocked {
+    background: var(--calendar-grey);
+    color: #fff;
+    cursor: not-allowed;
+}
+
+/* The chosen check-in date — a full solid blue block, edge to edge,
+   no gap from the grid lines. */
+.cal-day--selected {
+    background: var(--color-menu);
+    color: #fff;
+}
+
+/* The rest of the selected stay's nights — a soft blue preview, shows
+   through the (transparent) button since it's painted on the cell. */
+.cal-day--in-range {
+    background: rgba(103, 149, 219, 0.2);
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: #C6C6C6;
+    padding: 0.5rem 1rem;
+    font-size: var(--font-size-caption);
+}
+
+.calendar-nav button {
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 1.1em;
+    cursor: pointer;
+    color: inherit;
+    padding: 0;
+}
+
+.booking-summary {
+    font-size: var(--font-size-caption);
+    background: #fff;
+    padding: 0.5rem;
+    border: 1px solid var(--text-color);
+}
+
+#booking-status {
+    font-size: var(--font-size-caption);
+    min-height: 1.2em;
 }
 
 /* ---------- TABLET / PHONE ---------- */

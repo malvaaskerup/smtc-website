@@ -1,0 +1,9 @@
+{
+  "name": "smtc-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SMTC.se — static site + Vercel serverless booking API",
+  "dependencies": {
+    "googleapis": "^126.0.1"
+  }
+}

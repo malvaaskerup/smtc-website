@@ -86,7 +86,7 @@ kanot/kajakpaddling, samt egen brygga för öppen vatten-simning.
         </p>
 
         <p>
-SMTC Ekeberg erbjuder både personlig och medicinsk träning med paketlösningar. Hit kan komma och bo och träna själv, med sin partner eller med hela familjen (max fem personer och i mån av lediga rum). Medan en familjemedlem tränar eller återhämtar sig finns det aktiviteter för övriga i familjen att del av på den sjö – och skogsnära platsen (och lånbara analoga spel såklart). Till SMTC Ekeberg kan man även styra sin träningsresa till, med kompisar eller klubbmedlemmar. Tillsammans kan vi sy ihop ett upplägg, både med PT och gym – som utan. Även öppet för minikonferenser, givetvis med schemalagda rörelsepausar med PT. All träning på SMTC har även ett utbildningssyfte: man ska komma hit för att vilja lära sig träna på rätt sätt, tryggt och säkert. Det är speciellt viktigt i den medicinska metodträningen. Då kost kan komma att ingå i upplägget är självhushåll grunden i prissättningen av paketen.
+SMTC Ekeberg erbjuder både personlig och medicinsk träning med paketlösningar. Hit kan komma och bo och träna själv, med sin partner eller med hela familjen (max fem personer och i mån av lediga rum). Medan en familjemedlem tränar eller återhämtar sig finns det aktiviteter för övriga i familjen att del av på den sjö – och skogsnära platsen (och lånbara analoga spel såklart). Till SMTC Ekeberg kan man även styra sin träningsresa till, med kompisar eller klubbmedlemmar. Tillsammans kan vi sy ihop ett upplägg, både med PT och gym – som utan. Även öppet för minikonferenser, givetvis med schemalagda rörelsepausar med PT. All träning på SMTC har även ett utbildningssyfte: man ska komma hit för att vilja lära sig träna på rätt sätt, tryggt och säkert. Det är speciellt viktigt i den medicinska metodträningen. Då kost kan komma att ingå i upplägget är självhushåll grunden i prissättningen av paketen.
         </p>
 
         <p>
@@ -141,6 +141,63 @@ Betalning sker med faktura eller företagsswish, innan ankomst – om inget anna
 
     </div>
 
+    <!-- BOOKING
+         Deliberately a SIBLING of .content, not nested inside it: script.js
+         replaces .content's innerHTML with whatever's published in Sanity
+         for this page, which would silently delete this form if it lived
+         inside .content. Keep it out here so it survives that. -->
+
+    <div class="booking" id="booking">
+
+        <h3>Boka paket</h3>
+
+        <form id="booking-form" novalidate>
+
+            <label for="package">Välj paket</label>
+            <select id="package" name="package" required>
+                <option value="">– Välj paket –</option>
+                <option value="one" data-nights="1" data-price="2 495 kr">Dygnet – 2 495 kr</option>
+                <option value="two" data-nights="2" data-price="4 995 kr">Tvådygnare – 4 995 kr</option>
+                <option value="three" data-nights="3" data-price="6 995 kr">Tredygnare – 6 995 kr</option>
+                <option value="four" data-nights="4" data-price="8 995 kr">Fyrdygnare – 8 995 kr</option>
+            </select>
+
+            <div class="calendar" id="calendar">
+                <table class="cal-table">
+                    <thead>
+                        <tr id="cal-weekdays"></tr>
+                    </thead>
+                    <tbody id="cal-grid"></tbody>
+                </table>
+                <div class="calendar-nav">
+                    <button type="button" id="cal-prev" aria-label="Föregående månad">←</button>
+                    <span id="cal-month-label"></span>
+                    <button type="button" id="cal-next" aria-label="Nästa månad">→</button>
+                </div>
+            </div>
+
+            <p id="booking-summary" class="booking-summary" hidden></p>
+
+            <label for="b-name">Namn</label>
+            <input type="text" id="b-name" name="name" required>
+
+            <label for="b-email">E-post</label>
+            <input type="email" id="b-email" name="email" required>
+
+            <label for="b-phone">Telefon</label>
+            <input type="tel" id="b-phone" name="phone">
+
+            <label for="b-message">Meddelande</label>
+            <textarea id="b-message" name="message" rows="3"></textarea>
+
+            <button type="submit" id="booking-submit">Skicka bokningsförfrågan</button>
+
+            <p id="booking-status" role="status"></p>
+
+        </form>
+
+    </div>
+
     </div>
 
 </main>
@@ -151,6 +208,7 @@ Betalning sker med faktura eller företagsswish, innan ankomst – om inget anna
 
 <script src="https://cdn.jsdelivr.net/npm/@sanity/client@6/umd/sanityClient.min.js"></script>
 <script src="assets/js/script.js" defer></script>
+<script src="assets/js/booking.js" defer></script>
 
 </body>
 
