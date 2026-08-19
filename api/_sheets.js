@@ -66,12 +66,20 @@ async function getSheetsClient() {
 }
 
 // Row layout (header row in the sheet, row 1):
-// Timestamp | Status | Package | Startdatum | Slutdatum | Nätter | Namn | E-post | Telefon | Meddelande | Pris | ID
+// Timestamp | Status | Package | Startdatum | Slutdatum | Nätter | Namn | E-post | Telefon | Meddelande | Pris | ID | Betald
+//
+// "Betald" (column M) is a checkbox Fredric ticks once payment has actually
+// arrived. The "booking confirmed" email only goes out once BOTH Status is
+// "confirmed" AND Betald is checked — see api/confirm.js.
+function isTruthyCheckbox(value) {
+  return value === true || String(value).trim().toUpperCase() === "TRUE";
+}
+
 async function getAllBookings() {
   const sheets = await getSheetsClient();
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
-    range: `${SHEET_NAME}!A2:L`,
+    range: `${SHEET_NAME}!A2:M`,
   });
   const rows = res.data.values || [];
   return rows.map((r, i) => ({
@@ -88,6 +96,7 @@ async function getAllBookings() {
     message: r[9] || "",
     price: r[10] || "",
     id: r[11] || "",
+    paid: isTruthyCheckbox(r[12]),
   }));
 }
 
@@ -95,7 +104,7 @@ async function appendBooking(booking) {
   const sheets = await getSheetsClient();
   await sheets.spreadsheets.values.append({
     spreadsheetId: SHEET_ID,
-    range: `${SHEET_NAME}!A2:L`,
+    range: `${SHEET_NAME}!A2:M`,
     valueInputOption: "USER_ENTERED",
     insertDataOption: "INSERT_ROWS",
     requestBody: {
@@ -113,6 +122,7 @@ async function appendBooking(booking) {
           booking.message,
           booking.price,
           booking.id,
+          false, // Betald — starts unchecked
         ],
       ],
     },
