@@ -82,31 +82,53 @@ async function getAllBookings() {
     range: `${SHEET_NAME}!A2:M`,
   });
   const rows = res.data.values || [];
-  return rows.map((r, i) => ({
-    row: i + 2,
-    timestamp: r[0] || "",
-    status: r[1] || "",
-    package: r[2] || "",
-    startDate: r[3] || "",
-    endDate: r[4] || "",
-    nights: r[5] || "",
-    name: r[6] || "",
-    email: r[7] || "",
-    phone: r[8] || "",
-    message: r[9] || "",
-    price: r[10] || "",
-    id: r[11] || "",
-    paid: isTruthyCheckbox(r[12]),
-  }));
+  return rows
+    .map((r, i) => ({
+      row: i + 2,
+      timestamp: r[0] || "",
+      status: r[1] || "",
+      package: r[2] || "",
+      startDate: r[3] || "",
+      endDate: r[4] || "",
+      nights: r[5] || "",
+      name: r[6] || "",
+      email: r[7] || "",
+      phone: r[8] || "",
+      message: r[9] || "",
+      price: r[10] || "",
+      id: r[11] || "",
+      paid: isTruthyCheckbox(r[12]),
+    }))
+    // Rows with checkbox formatting (e.g. the Betald column applied to a
+    // whole column range) hold a real FALSE value even with no booking on
+    // that row — that's not a real booking, so filter on something only a
+    // real row has: a timestamp.
+    .filter((b) => b.timestamp);
 }
 
+// Writes to an explicit row number rather than using the Sheets API's
+// values.append (which infers the next empty row itself). append's
+// inference looks at every column in the given range, including Betald —
+// and a checkbox column that got formatted onto more rows than there is
+// real data holds real FALSE values on those "empty-looking" rows, which
+// tricks append into skipping way further down the sheet than intended.
+// Counting real rows ourselves (via the Timestamp column, which only ever
+// has a value on genuine booking rows) and writing directly to that row
+// sidesteps the whole problem.
 async function appendBooking(booking) {
   const sheets = await getSheetsClient();
-  await sheets.spreadsheets.values.append({
+
+  const existing = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
-    range: `${SHEET_NAME}!A2:M`,
+    range: `${SHEET_NAME}!A2:A`,
+  });
+  const usedRows = (existing.data.values || []).filter((r) => r[0]).length;
+  const targetRow = usedRows + 2; // header is row 1, data starts row 2
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: SHEET_ID,
+    range: `${SHEET_NAME}!A${targetRow}:M${targetRow}`,
     valueInputOption: "USER_ENTERED",
-    insertDataOption: "INSERT_ROWS",
     requestBody: {
       values: [
         [
