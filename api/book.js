@@ -64,6 +64,59 @@ async function sendNotificationEmail(booking) {
   }
 }
 
+// Sent to the person who booked, confirming their *request* arrived — not
+// that Fredric has approved it yet (that still only happens when he changes
+// the Status cell in the sheet). Keeps them from wondering if the form
+// actually worked.
+async function sendGuestReceipt(booking) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from =
+    process.env.BOOKING_FROM_EMAIL || "SMTC bokning <onboarding@resend.dev>";
+
+  if (!apiKey || !booking.email) {
+    console.warn("RESEND_API_KEY or booking email missing — skipping guest receipt.");
+    return;
+  }
+
+  const html = `
+    <p>Hej ${booking.name}!</p>
+    <p>Tack för din bokningsförfrågan hos SMTC Ekeberg. Vi har tagit emot
+    den och dina datum är preliminärbokade:</p>
+    <p><strong>Paket:</strong> ${booking.package}<br>
+    <strong>Datum:</strong> ${booking.startDate} till ${booking.endDate}<br>
+    <strong>Pris:</strong> ${booking.price}</p>
+    <p>Vi återkommer och bekräftar din bokning så snart som möjligt. Hör av
+    dig om du har några frågor under tiden.</p>
+    <p><strong>Betalning:</strong><br>
+    Betalning sker med faktura eller Företagsswish, innan ankomst — om
+    inget annat överenskommits. Moms med 6% ingår för privatpersoner, men
+    läggs på över totalsumman för företag.<br>
+    För betalningar från utlandet går det bra med PayPal (sök på Fredric
+    Askerup, eller användarnamnet fredricaskerup).<br>
+    Vi hör av oss med betalningsuppgifter/faktura när bokningen är
+    bekräftad.</p>
+    <p>Hälsningar,<br>SMTC Ekeberg</p>
+  `;
+
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: booking.email,
+      subject: "Din bokningsförfrågan hos SMTC Ekeberg är mottagen",
+      html,
+    }),
+  });
+
+  if (!res.ok) {
+    console.error("Resend error (guest receipt):", await res.text());
+  }
+}
+
 module.exports = async (req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
 
@@ -117,7 +170,17 @@ module.exports = async (req, res) => {
     };
 
     await appendBooking(booking);
-    await sendNotificationEmail(booking);
+    // Neither of these should ever block the booking itself — the request
+    // is already saved at this point. Run them, but don't let a Resend
+    // hiccup turn a successful booking into a 500 for the guest.
+    await Promise.all([
+      sendNotificationEmail(booking).catch((err) =>
+        console.error("Failed to email Fredric:", err)
+      ),
+      sendGuestReceipt(booking).catch((err) =>
+        console.error("Failed to email guest receipt:", err)
+      ),
+    ]);
 
     res.status(200).json({ ok: true, startDate, endDate });
   } catch (err) {

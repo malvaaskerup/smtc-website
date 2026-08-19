@@ -15,12 +15,43 @@ const { google } = require("googleapis");
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 const SHEET_NAME = process.env.GOOGLE_SHEET_NAME || "Bookings";
 
+// Vercel's env var UI is easy to paste the private key into wrong (it's a
+// multi-line value). This cleans up the most common mistakes so a bad paste
+// gives a clear error instead of Node's cryptic
+// "error:1E08010C:DECODER routines::unsupported".
+function cleanPrivateKey(raw) {
+  let key = (raw || "").trim();
+
+  // If the whole value got wrapped in quotes when it was pasted (e.g. it
+  // still has the quote marks from the downloaded JSON file), strip them.
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1);
+  }
+
+  // The JSON file stores real line breaks as the two characters \ and n.
+  // If those literal characters made it into the env var, turn them back
+  // into real newlines. If the value already has real newlines (because it
+  // was pasted as multi-line text) this is a no-op.
+  key = key.replace(/\\n/g, "\n").trim();
+
+  return key;
+}
+
 function getAuth() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const key = (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n");
+  const key = cleanPrivateKey(process.env.GOOGLE_PRIVATE_KEY);
   if (!email || !key || !SHEET_ID) {
     throw new Error(
       "Missing Google Sheets config (GOOGLE_SERVICE_ACCOUNT_EMAIL / GOOGLE_PRIVATE_KEY / GOOGLE_SHEET_ID)."
+    );
+  }
+  if (!key.includes("-----BEGIN PRIVATE KEY-----") || !key.includes("-----END PRIVATE KEY-----")) {
+    throw new Error(
+      "GOOGLE_PRIVATE_KEY doesn't look like a valid PEM key (missing -----BEGIN/END PRIVATE KEY----- lines). " +
+        "Re-copy the private_key value from the service account's JSON file into Vercel, including those lines."
     );
   }
   return new google.auth.JWT(email, null, key, [
