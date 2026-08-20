@@ -68,6 +68,68 @@
 
     <div class="content-area">
 
+    <!-- BOOKING
+         Deliberately a SIBLING of .content, not nested inside it: script.js
+         replaces .content's innerHTML with whatever's published in Sanity
+         for this page, which would silently delete this form if it lived
+         inside .content. Kept out here so it survives that, and placed
+         before .content in the markup so it renders at the top of the page
+         (.booking uses flex: 1 1 100% in style.css, so it already takes a
+         full row of its own inside .content-area's wrapping flex layout —
+         moving it here in the source is what actually puts it above the
+         text instead of below). -->
+
+    <div class="booking" id="booking">
+
+        <h3 data-eng="Book a package">Boka paket</h3>
+
+        <form id="booking-form" novalidate>
+
+            <label for="package" data-eng="Choose package"></label>
+            <select id="package" name="package" required>
+                <option value="" data-eng="– Select package –">– Välj paket –</option>
+                <option value="one" data-nights="1" data-price="2 495 kr" data-eng="One night – 2 495 kr">Dygnet – 2.495 kr</option>
+                <option value="two" data-nights="2" data-price="4 995 kr" data-eng="Two nights – 4 995 kr">Tvådygnare – 4.995 kr</option>
+                <option value="three" data-nights="3" data-price="6 995 kr" data-eng="Three nights – 6 995 kr">Tredygnare – 6.995 kr</option>
+                <option value="four" data-nights="4" data-price="8 995 kr" data-eng="Four nights – 8 995 kr">Fyrdygnare – 8.995 kr</option>
+            </select>
+
+            <div class="calendar" id="calendar">
+                <table class="cal-table">
+                    <thead>
+                        <tr id="cal-weekdays"></tr>
+                    </thead>
+                    <tbody id="cal-grid"></tbody>
+                </table>
+                <div class="calendar-nav">
+                    <button type="button" id="cal-prev" aria-label="Föregående månad">←</button>
+                    <span id="cal-month-label"></span>
+                    <button type="button" id="cal-next" aria-label="Nästa månad">→</button>
+                </div>
+            </div>
+
+            <p id="booking-summary" class="booking-summary" hidden></p>
+
+            <label for="b-name" data-eng="Name">Namn</label>
+            <input type="text" id="b-name" name="name" required>
+
+            <label for="b-email" data-eng="Email">E-post</label>
+            <input type="email" id="b-email" name="email" required>
+
+            <label for="b-phone" data-eng="Phone">Telefon</label>
+            <input type="tel" id="b-phone" name="phone">
+
+            <label for="b-message" data-eng="Message">Meddelande</label>
+            <textarea id="b-message" name="message" rows="3"></textarea>
+
+            <button type="submit" id="booking-submit" data-eng="Send booking request">Skicka bokningsförfrågan</button>
+
+            <p id="booking-status" role="status"></p>
+
+        </form>
+
+    </div>
+
     <div class="content">
 
         <p>
@@ -131,7 +193,6 @@ SMTC Ekeberg erbjuder både personlig och medicinsk träning med paketlösningar
 Betalning sker med faktura eller företagsswish, innan ankomst – om inget annat är överenskommet. Moms med 6% ingår för privatpersoner, men läggs på över totalsumman för företag.
         </p>
 
-
         <p>
             För betalningar från utlandet kan betalning göras med Paypal. Sök på Fredric Askerup, eller användarnamnet: fredricaskerup.
         </p>
@@ -139,63 +200,6 @@ Betalning sker med faktura eller företagsswish, innan ankomst – om inget anna
         <p>
             För familjer som behöver båda rummen är tilläggspriset per dygn: 750 kr.
         </p>
-
-    </div>
-
-    <!-- BOOKING
-         Deliberately a SIBLING of .content, not nested inside it: script.js
-         replaces .content's innerHTML with whatever's published in Sanity
-         for this page, which would silently delete this form if it lived
-         inside .content. Keep it out here so it survives that. -->
-
-    <div class="booking" id="booking">
-
-        <h3>Boka paket</h3>
-
-        <form id="booking-form" novalidate>
-
-            <label for="package">Välj paket</label>
-            <select id="package" name="package" required>
-                <option value="">– Välj paket –</option>
-                <option value="one" data-nights="1" data-price="2 495 kr">Dygnet – 2.495 kr</option>
-                <option value="two" data-nights="2" data-price="4 995 kr">Tvådygnare – 4.995 kr</option>
-                <option value="three" data-nights="3" data-price="6 995 kr">Tredygnare – 6.995 kr</option>
-                <option value="four" data-nights="4" data-price="8 995 kr">Fyrdygnare – 8.995 kr</option>
-            </select>
-
-            <div class="calendar" id="calendar">
-                <table class="cal-table">
-                    <thead>
-                        <tr id="cal-weekdays"></tr>
-                    </thead>
-                    <tbody id="cal-grid"></tbody>
-                </table>
-                <div class="calendar-nav">
-                    <button type="button" id="cal-prev" aria-label="Föregående månad">←</button>
-                    <span id="cal-month-label"></span>
-                    <button type="button" id="cal-next" aria-label="Nästa månad">→</button>
-                </div>
-            </div>
-
-            <p id="booking-summary" class="booking-summary" hidden></p>
-
-            <label for="b-name">Namn</label>
-            <input type="text" id="b-name" name="name" required>
-
-            <label for="b-email">E-post</label>
-            <input type="email" id="b-email" name="email" required>
-
-            <label for="b-phone">Telefon</label>
-            <input type="tel" id="b-phone" name="phone">
-
-            <label for="b-message">Meddelande</label>
-            <textarea id="b-message" name="message" rows="3"></textarea>
-
-            <button type="submit" id="booking-submit">Skicka bokningsförfrågan</button>
-
-            <p id="booking-status" role="status"></p>
-
-        </form>
 
     </div>
 

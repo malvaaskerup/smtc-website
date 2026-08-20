@@ -5,10 +5,10 @@
 const { getAllBookings, appendBooking } = require("./_sheets");
 
 const PACKAGES = {
-  one: { label: "Dygnet (1 dygn)", nights: 1, price: "2 495 kr" },
-  two: { label: "Tvådygnare (2 dygn)", nights: 2, price: "4 995 kr" },
-  three: { label: "Tredygnare (3 dygn)", nights: 3, price: "6 995 kr" },
-  four: { label: "Fyrdygnare (4 dygn)", nights: 4, price: "8 995 kr" },
+  one: { label: "Dygnet (1 dygn)", nights: 1, price: "2.495 kr" },
+  two: { label: "Tvådygnare (2 dygn)", nights: 2, price: "4.995 kr" },
+  three: { label: "Tredygnare (3 dygn)", nights: 3, price: "6.995 kr" },
+  four: { label: "Fyrdygnare (4 dygn)", nights: 4, price: "8.995 kr" },
 };
 
 function addDays(dateStr, days) {
@@ -95,7 +95,14 @@ async function sendGuestReceipt(booking) {
     Askerup, eller användarnamnet fredricaskerup).<br>
     Vi hör av oss med betalningsuppgifter/faktura när bokningen är
     bekräftad.</p>
-    <p>Hälsningar,<br>SMTC Ekeberg</p>
+    <p>Hälsningar,<br>SMTC Ekeberg<br><br>
+    Fredric Askerup, Lic Medicinsk tränare, vid Stenebys Medicinska Träningscentrum (SMTC).<br>
+    <a href="tel:+46739133177">+46 73 913 31 77</a><br>
+    <a href="mailto:fredricaskerup@gmail.com">fredricaskerup@gmail.com</a>
+    <a href="https://www.google.com/maps/place/Ekeberg/@58.9294654,12.1894925,15z/data=!3m1!4b1!4m6!3m5!1s0x46448d0027628527:0x1288809db24e27fd!8m2!3d58.9294658!4d12.1997708!16s%2Fg%2F11njn0t886?entry=ttu&g_ep=EgoyMDI2MDcyOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer">
+    Taxviken Ekeberg 1, 66694 Dals Långed, Sverige</a><br>
+    <a href="https://www.smtc.se/">smtc.se</a>
+    </p>
   `;
 
   const res = await fetch("https://api.resend.com/emails", {
@@ -131,11 +138,14 @@ module.exports = async (req, res) => {
 
     const pkg = PACKAGES[packageKey];
     if (!pkg || !startDate || !name || !email) {
-      res.status(400).json({ error: "Fyll i alla obligatoriska fält." });
+      res.status(400).json({
+        error: "Fyll i alla obligatoriska fält.",
+        code: "missing_fields",
+      });
       return;
     }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
-      res.status(400).json({ error: "Ogiltigt datum." });
+      res.status(400).json({ error: "Ogiltigt datum.", code: "invalid_date" });
       return;
     }
 
@@ -150,6 +160,7 @@ module.exports = async (req, res) => {
     if (clash) {
       res.status(409).json({
         error: "Valda datum är tyvärr redan bokade. Välj andra datum.",
+        code: "date_conflict",
       });
       return;
     }
@@ -185,8 +196,9 @@ module.exports = async (req, res) => {
     res.status(200).json({ ok: true, startDate, endDate });
   } catch (err) {
     console.error(err);
-    res
-      .status(500)
-      .json({ error: "Något gick fel. Försök igen eller maila oss direkt." });
+    res.status(500).json({
+      error: "Något gick fel. Försök igen eller maila oss direkt.",
+      code: "server_error",
+    });
   }
 };

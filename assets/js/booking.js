@@ -8,9 +8,19 @@
 // Google Sheet, and emails Fredric. The booking is "prebooked" the moment
 // it's saved (it blocks those dates for everyone else) until Fredric
 // changes its status to "confirmed" (or "cancelled") in the sheet.
+//
+// Language: the rest of the site translates static text via a data-eng
+// attribute that script.js swaps in/out on click (see applyStaticTranslations
+// in script.js), storing the chosen language in localStorage under
+// "smtc-lang". That mechanism only touches elements already in the DOM —
+// it can't handle the calendar grid, weekday headers, month label, or
+// status messages, since those are (re)built by this file at runtime. So
+// this file tracks the same localStorage key itself and re-renders its own
+// dynamic bits whenever the language toggle is clicked.
 
 (function () {
   var PACKAGE_NIGHTS = { one: 1, two: 2, three: 3, four: 4 };
+  var LANG_KEY = "smtc-lang";
 
   var form = document.getElementById("booking-form");
   if (!form) return; // booking widget isn't on this page
@@ -32,29 +42,114 @@
 
   var selectedStart = null; // "YYYY-MM-DD"
   var blockedRanges = []; // [{start, end}], end is exclusive (checkout day)
+  var lastStatusKey = null; // which STRINGS.status.* is currently shown, so re-render can re-localize it
 
-  // Single-letter headers (M T O T F L S), full names kept as a tooltip.
-  // Columns are Monday-first to match the business's own week (index 0 =
-  // Monday .. index 6 = Sunday).
-  var WEEKDAYS = [
-    { short: "M", full: "Måndag" },
-    { short: "T", full: "Tisdag" },
-    { short: "O", full: "Onsdag" },
-    { short: "T", full: "Torsdag" },
-    { short: "F", full: "Fredag" },
-    { short: "L", full: "Lördag" },
-    { short: "S", full: "Söndag" },
-  ];
+  function currentLang() {
+    return localStorage.getItem(LANG_KEY) === "eng" ? "eng" : "swe";
+  }
+
+  function t(key) {
+    var parts = key.split(".");
+    var node = STRINGS[currentLang()];
+    for (var i = 0; i < parts.length; i++) node = node[parts[i]];
+    return node;
+  }
+
+  var STRINGS = {
+    swe: {
+      weekdays: [
+        { short: "M", full: "Måndag" },
+        { short: "T", full: "Tisdag" },
+        { short: "O", full: "Onsdag" },
+        { short: "T", full: "Torsdag" },
+        { short: "F", full: "Fredag" },
+        { short: "L", full: "Lördag" },
+        { short: "S", full: "Söndag" },
+      ],
+      months: [
+        "Januari", "Februari", "Mars", "April", "Maj", "Juni",
+        "Juli", "Augusti", "September", "Oktober", "November", "December",
+      ],
+      dateLocale: "sv-SE",
+      prevMonth: "Föregående månad",
+      nextMonth: "Nästa månad",
+      summary: function (label, checkin, checkout, price) {
+        return (
+          label + ": incheck " + checkin + " kl 14, utcheck " + checkout +
+          " kl 12" + (price ? " — " + price : "")
+        );
+      },
+      status: {
+        packageFirst: "Välj ett paket först.",
+        choosePackage: "Välj ett paket.",
+        chooseDate: "Välj ett incheckningsdatum i kalendern.",
+        fillNameEmail: "Fyll i namn och e-post.",
+        sending: "Skickar...",
+        success:
+          "Tack! Din bokningsförfrågan är mottagen och preliminärbokad. Vi bekräftar den så snart som möjligt.",
+        genericError: "Något gick fel. Försök igen.",
+        networkError: "Kunde inte skicka. Kontrollera din uppkoppling och försök igen.",
+        missingFields: "Fyll i alla obligatoriska fält.",
+        invalidDate: "Ogiltigt datum.",
+        dateConflict: "Valda datum är tyvärr redan bokade. Välj andra datum.",
+        serverError: "Något gick fel. Försök igen eller maila oss direkt.",
+      },
+    },
+    eng: {
+      weekdays: [
+        { short: "M", full: "Monday" },
+        { short: "T", full: "Tuesday" },
+        { short: "W", full: "Wednesday" },
+        { short: "T", full: "Thursday" },
+        { short: "F", full: "Friday" },
+        { short: "S", full: "Saturday" },
+        { short: "S", full: "Sunday" },
+      ],
+      months: [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
+      ],
+      dateLocale: "en-GB",
+      prevMonth: "Previous month",
+      nextMonth: "Next month",
+      summary: function (label, checkin, checkout, price) {
+        return (
+          label + ": check-in " + checkin + " at 2pm, check-out " + checkout +
+          " at 12pm" + (price ? " — " + price : "")
+        );
+      },
+      status: {
+        packageFirst: "Please select a package first.",
+        choosePackage: "Please select a package.",
+        chooseDate: "Please select a check-in date in the calendar.",
+        fillNameEmail: "Please fill in your name and email.",
+        sending: "Sending...",
+        success:
+          "Thank you! Your booking request has been received and the dates are provisionally held. We'll confirm as soon as possible.",
+        genericError: "Something went wrong. Please try again.",
+        networkError: "Couldn't send. Check your connection and try again.",
+        missingFields: "Please fill in all required fields.",
+        invalidDate: "Invalid date.",
+        dateConflict: "Sorry, those dates are already booked. Please choose different dates.",
+        serverError: "Something went wrong. Please try again or email us directly.",
+      },
+    },
+  };
+
+  // Server-side error codes (see api/book.js) mapped to a localized message,
+  // so client-side language doesn't depend on the server ever knowing what
+  // language the visitor is using.
+  var ERROR_CODE_TO_STATUS_KEY = {
+    missing_fields: "missingFields",
+    invalid_date: "invalidDate",
+    date_conflict: "dateConflict",
+    server_error: "serverError",
+  };
 
   // SMTC only takes check-ins Wednesday–Sunday (see prices.html), so the
   // Monday/Tuesday columns (index 0, 1) are always left blank rather than
   // shown as disabled dates. Adjust here if that ever changes.
   var CLOSED_COLUMNS = [0, 1];
-
-  var MONTHS = [
-    "Januari", "Februari", "Mars", "April", "Maj", "Juni",
-    "Juli", "Augusti", "September", "Oktober", "November", "December",
-  ];
 
   function pad2(n) {
     return n < 10 ? "0" + n : "" + n;
@@ -115,10 +210,15 @@
     return isRangeFree(toISO(date), nights);
   }
 
+  function setStatus(key) {
+    lastStatusKey = key;
+    statusEl.textContent = key ? t("status." + key) : "";
+  }
+
   function renderWeekdayHeader() {
     var row = document.getElementById("cal-weekdays");
     row.innerHTML = "";
-    WEEKDAYS.forEach(function (w) {
+    t("weekdays").forEach(function (w) {
       var th = document.createElement("th");
       th.textContent = w.short;
       th.title = w.full;
@@ -126,9 +226,14 @@
     });
   }
 
+  function updateNavLabels() {
+    prevBtn.setAttribute("aria-label", t("prevMonth"));
+    nextBtn.setAttribute("aria-label", t("nextMonth"));
+  }
+
   function renderCalendar() {
     calGrid.innerHTML = "";
-    monthLabel.textContent = MONTHS[viewMonth] + " " + viewYear;
+    monthLabel.textContent = t("months")[viewMonth] + " " + viewYear;
 
     var firstOfMonth = new Date(viewYear, viewMonth, 1);
     var startOffset = (firstOfMonth.getDay() + 6) % 7; // Monday = 0
@@ -184,7 +289,7 @@
 
         btn.addEventListener("click", function () {
           if (!currentNights()) {
-            statusEl.textContent = "Välj ett paket först.";
+            setStatus("packageFirst");
             return;
           }
           selectedStart = this.dataset.date;
@@ -201,7 +306,7 @@
   }
 
   function formatDate(date) {
-    return date.toLocaleDateString("sv-SE", {
+    return date.toLocaleDateString(t("dateLocale"), {
       weekday: "short",
       day: "numeric",
       month: "short",
@@ -218,12 +323,14 @@
     var end = addDays(start, nights);
     var opt = packageSelect.options[packageSelect.selectedIndex];
     var price = opt ? opt.dataset.price : "";
+    // opt.textContent reflects whatever language script.js currently has
+    // swapped into the <option> (via its data-eng mechanism), so this
+    // naturally follows the page's language as long as both use the same
+    // "Label – price" separator.
     var label = opt ? opt.textContent.split(" – ")[0] : "";
 
     summaryEl.hidden = false;
-    summaryEl.textContent =
-      label + ": incheck " + formatDate(start) + " kl 14, utcheck " +
-      formatDate(end) + " kl 12" + (price ? " — " + price : "");
+    summaryEl.textContent = t("summary")(label, formatDate(start), formatDate(end), price);
   }
 
   function loadAvailability() {
@@ -257,16 +364,32 @@
     renderSummary();
   });
 
+  // Re-render everything this file owns whenever the site's lang switch is
+  // clicked. script.js handles its own [data-eng] elements independently —
+  // this just keeps the calendar/summary/status text in sync with it.
+  document.querySelectorAll(".lang-option").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      renderWeekdayHeader();
+      updateNavLabels();
+      renderCalendar();
+      renderSummary();
+      // Re-show whatever status message was up, translated — but not the
+      // one-off submit-error text from the server, since re-fetching that
+      // in the new language isn't worth it for a message the user has
+      // likely already read.
+      if (lastStatusKey) setStatus(lastStatusKey);
+    });
+  });
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
-    statusEl.textContent = "";
 
     if (!packageSelect.value) {
-      statusEl.textContent = "Välj ett paket.";
+      setStatus("choosePackage");
       return;
     }
     if (!selectedStart) {
-      statusEl.textContent = "Välj ett incheckningsdatum i kalendern.";
+      setStatus("chooseDate");
       return;
     }
 
@@ -276,12 +399,12 @@
     var message = document.getElementById("b-message").value.trim();
 
     if (!name || !email) {
-      statusEl.textContent = "Fyll i namn och e-post.";
+      setStatus("fillNameEmail");
       return;
     }
 
     submitBtn.disabled = true;
-    statusEl.textContent = "Skickar...";
+    setStatus("sending");
 
     fetch("/api/book", {
       method: "POST",
@@ -303,11 +426,18 @@
       .then(function (result) {
         submitBtn.disabled = false;
         if (!result.ok) {
-          statusEl.textContent = (result.data && result.data.error) || "Något gick fel. Försök igen.";
+          var code = result.data && result.data.code;
+          var statusKey = code && ERROR_CODE_TO_STATUS_KEY[code];
+          if (statusKey) {
+            setStatus(statusKey);
+          } else {
+            lastStatusKey = null;
+            statusEl.textContent =
+              (result.data && result.data.error) || t("status.genericError");
+          }
           return;
         }
-        statusEl.textContent =
-          "Tack! Din bokningsförfrågan är mottagen och preliminärbokad. Vi bekräftar den så snart som möjligt.";
+        setStatus("success");
         form.reset();
         selectedStart = null;
         summaryEl.hidden = true;
@@ -315,11 +445,12 @@
       })
       .catch(function () {
         submitBtn.disabled = false;
-        statusEl.textContent = "Kunde inte skicka. Kontrollera din uppkoppling och försök igen.";
+        setStatus("networkError");
       });
   });
 
   renderWeekdayHeader();
+  updateNavLabels();
   renderCalendar();
   loadAvailability();
 })();
