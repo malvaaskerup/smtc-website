@@ -456,7 +456,7 @@ p a[aria-current="page"] {
     padding: 0.5rem 1rem;
     border: 1px solid var(--color-nav);
     background: var(--color-nav);
-    color: #fff;
+    color: #E0E0E0;
     cursor: pointer;
     width: fit-content;
 }
@@ -526,15 +526,14 @@ p a[aria-current="page"] {
 
 /* The chosen check-in date — a full solid blue block, edge to edge,
    no gap from the grid lines. */
-.cal-day--selected {
+.cal-day--selected,
+.cal-day--in-range {
     background: var(--color-menu);
-    color: #E0E0E0;
 }
 
-/* The rest of the selected stay's nights — a soft blue preview, shows
-   through the (transparent) button since it's painted on the cell. */
-.cal-day--in-range {
-    background: rgba(103, 149, 219, 0.2);
+.cal-day--selected,
+.cal-day--in-range .cal-day {
+    color: #E0E0E0;
 }
 
 .calendar-nav {
