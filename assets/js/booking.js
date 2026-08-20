@@ -373,8 +373,19 @@
   // Re-render everything this file owns whenever the site's lang switch is
   // clicked. script.js handles its own [data-eng] elements independently —
   // this just keeps the calendar/summary/status text in sync with it.
+  //
+  // Writing localStorage here too (not just relying on script.js's own
+  // click handler on the same buttons) matters: whichever file's listener
+  // got attached to the button first runs first, and that's not something
+  // to depend on across two separate files. Without this, this handler
+  // could run *before* script.js's had a chance to update localStorage,
+  // reading the stale language and rendering one click behind — only
+  // catching up on the next reload. Reading the language straight off the
+  // clicked button's own data-lang makes this handler self-sufficient
+  // regardless of ordering.
   document.querySelectorAll(".lang-option").forEach(function (btn) {
     btn.addEventListener("click", function () {
+      localStorage.setItem(LANG_KEY, this.dataset.lang);
       renderWeekdayHeader();
       updateNavLabels();
       renderCalendar();
