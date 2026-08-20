@@ -520,7 +520,7 @@ p a[aria-current="page"] {
 .cal-day:disabled,
 .cal-day--blocked {
     background: var(--calendar-grey);
-    color: #fff;
+    color: #E0E0E0;
     cursor: not-allowed;
 }
 
@@ -528,7 +528,7 @@ p a[aria-current="page"] {
    no gap from the grid lines. */
 .cal-day--selected {
     background: var(--color-menu);
-    color: #fff;
+    color: #E0E0E0;
 }
 
 /* The rest of the selected stay's nights — a soft blue preview, shows
@@ -542,7 +542,7 @@ p a[aria-current="page"] {
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    background: #C6C6C6;
+    background: #BABABA;
     padding: 0.5rem 1rem;
     font-size: var(--font-size-caption);
 }
@@ -559,7 +559,7 @@ p a[aria-current="page"] {
 
 .booking-summary {
     font-size: var(--font-size-caption);
-    background: #fff;
+    background: #FCF7B6;
     padding: 0.5rem;
     border: 1px solid var(--text-color);
 }
