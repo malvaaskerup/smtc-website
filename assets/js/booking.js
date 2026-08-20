@@ -322,7 +322,13 @@
     var start = fromISO(selectedStart);
     var end = addDays(start, nights);
     var opt = packageSelect.options[packageSelect.selectedIndex];
-    var price = opt ? opt.dataset.price : "";
+    // data-price is the Swedish kr price; data-price-eng is the separate
+    // EURO price shown in English (not just a translated label — a
+    // genuinely different number), so unlike the label below it can't be
+    // read off the option's own text and has to be picked explicitly here.
+    var price = opt
+      ? (currentLang() === "eng" ? opt.dataset.priceEng : opt.dataset.price)
+      : "";
     // opt.textContent reflects whatever language script.js currently has
     // swapped into the <option> (via its data-eng mechanism), so this
     // naturally follows the page's language as long as both use the same
