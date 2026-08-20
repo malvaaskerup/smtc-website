@@ -254,7 +254,7 @@ p a[aria-current="page"] {
     right: 1rem;
     transform: translateY(-50%);
     z-index: 21;
-    color: #027F00;
+    color:#027F00;
 
     padding: 0.25rem;
     font-size: var(--font-size-caption);
