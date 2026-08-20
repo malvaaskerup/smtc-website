@@ -98,7 +98,7 @@ async function sendGuestReceipt(booking) {
     <p>Hälsningar,<br>SMTC Ekeberg<br><br>
     Fredric Askerup, Lic Medicinsk tränare, vid Stenebys Medicinska Träningscentrum (SMTC).<br>
     <a href="tel:+46739133177">+46 73 913 31 77</a><br>
-    <a href="mailto:fredricaskerup@gmail.com">fredricaskerup@gmail.com</a>
+    <a href="mailto:fredricaskerup@gmail.com">fredricaskerup@gmail.com</a><br>
     <a href="https://www.google.com/maps/place/Ekeberg/@58.9294654,12.1894925,15z/data=!3m1!4b1!4m6!3m5!1s0x46448d0027628527:0x1288809db24e27fd!8m2!3d58.9294658!4d12.1997708!16s%2Fg%2F11njn0t886?entry=ttu&g_ep=EgoyMDI2MDcyOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer">
     Taxviken Ekeberg 1, 66694 Dals Långed, Sverige</a><br>
     <a href="https://www.smtc.se/">smtc.se</a>
