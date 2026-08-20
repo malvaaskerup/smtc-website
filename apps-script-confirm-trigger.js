@@ -1,9 +1,11 @@
 // Google Apps Script — watches the Bookings sheet and tells the website to
-// email the guest at two moments:
+// email the guest at three moments:
 //   - when Status is changed to "confirmed"  -> "you're approved, pay via
 //     Swish/faktura/PayPal" email
 //   - when Betald (paid) gets checked        -> "payment received, all
 //     set" email
+//   - when Status is changed to "cancelled"  -> "your booking is
+//     cancelled" email
 //
 // SETUP (one-time):
 // 1. Open the Google Sheet → Extensions → Apps Script.
@@ -45,10 +47,12 @@ function onBookingSheetEdit(e) {
   if (col === STATUS_COLUMN) {
     var newStatus = (e.value || "").toString().trim().toLowerCase();
     var oldStatus = (e.oldValue || "").toString().trim().toLowerCase();
-    // Only fire on the transition *into* confirmed, not every edit of an
-    // already-confirmed row.
+    // Only fire on the transition *into* a status, not every edit of an
+    // already-confirmed/already-cancelled row.
     if (newStatus === "confirmed" && oldStatus !== "confirmed") {
       callWebhook(row, "confirmed");
+    } else if (newStatus === "cancelled" && oldStatus !== "cancelled") {
+      callWebhook(row, "cancelled");
     }
     return;
   }

@@ -3,7 +3,7 @@
 // This is NOT called by the website — it's called by a small Google Apps
 // Script trigger bound to the booking sheet (see
 // apps-script-confirm-trigger.js), which fires whenever Fredric edits the
-// Status or Betald (paid) column. Two separate emails go out at two
+// Status or Betald (paid) column. Three separate emails go out at three
 // separate moments:
 //
 //   1. Status changes to "confirmed"  ->  "you're approved, here's how to
@@ -11,11 +11,13 @@
 //   2. Betald gets checked (paid)     ->  "payment received, you're all
 //      set" email — no payment instructions repeated, since they've
 //      already paid.
+//   3. Status changes to "cancelled"  ->  "your booking is cancelled"
+//      email, releasing the dates.
 //
-// Splitting it this way (rather than one email once both are true) is
-// deliberate: the guest needs the payment instructions *before* they can
-// pay, and the "fully confirmed" receipt only makes sense *after* Fredric
-// has actually seen the payment land.
+// Splitting confirmed/paid this way (rather than one email once both are
+// true) is deliberate: the guest needs the payment instructions *before*
+// they can pay, and the "fully confirmed" receipt only makes sense *after*
+// Fredric has actually seen the payment land.
 //
 // Protected by a shared secret (CONFIRM_WEBHOOK_SECRET) so random people
 // can't hit this URL and spam guests — the Apps Script sends the same
@@ -54,6 +56,19 @@ async function sendEmail(booking, subject, html) {
   }
 }
 
+// Shared sign-off, appended to every guest email so they always have a
+// direct way to reach Fredric.
+const SIGNATURE = `
+    <p>Hälsningar,<br>SMTC Ekeberg<br><br>
+    Fredric Askerup, Lic Medicinsk tränare, vid Stenebys Medicinska Träningscentrum (SMTC).<br>
+    <a href="tel:+46739133177">+46 73 913 31 77</a><br>
+    <a href="mailto:fredricaskerup@gmail.com">fredricaskerup@gmail.com</a><br>
+    <a href="https://www.google.com/maps/place/Ekeberg/@58.9294654,12.1894925,15z/data=!3m1!4b1!4m6!3m5!1s0x46448d0027628527:0x1288809db24e27fd!8m2!3d58.9294658!4d12.1997708!16s%2Fg%2F11njn0t886?entry=ttu&g_ep=EgoyMDI2MDcyOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer">
+    Taxviken Ekeberg 1, 66694 Dals Långed, Sverige</a><br>
+    <a href="https://www.smtc.se/">smtc.se</a>
+    </p>
+`;
+
 // Sent when Fredric changes Status to "confirmed". Tells the guest they're
 // approved and how to pay.
 async function sendApprovedEmail(booking) {
@@ -73,14 +88,7 @@ async function sendApprovedEmail(booking) {
     Askerup, eller användarnamnet fredricaskerup).</p>
     <p>Så snart betalningen är registrerad hos oss skickar vi en sista
     bekräftelse — sen är allt klart!</p>
-    <p>Hälsningar,<br>SMTC Ekeberg<br><br>
-    Fredric Askerup, Lic Medicinsk tränare, vid Stenebys Medicinska Träningscentrum (SMTC).<br>
-    <a href="tel:+46739133177">+46 73 913 31 77</a><br>
-    <a href="mailto:fredricaskerup@gmail.com">fredricaskerup@gmail.com</a><br>
-    <a href="https://www.google.com/maps/place/Ekeberg/@58.9294654,12.1894925,15z/data=!3m1!4b1!4m6!3m5!1s0x46448d0027628527:0x1288809db24e27fd!8m2!3d58.9294658!4d12.1997708!16s%2Fg%2F11njn0t886?entry=ttu&g_ep=EgoyMDI2MDcyOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer">
-    Taxviken Ekeberg 1, 66694 Dals Långed, Sverige</a><br>
-    <a href="https://www.smtc.se/">smtc.se</a>
-    </p>
+    ${SIGNATURE}
   `;
   await sendEmail(
     booking,
@@ -101,18 +109,34 @@ async function sendPaidEmail(booking) {
     <strong>Pris:</strong> ${booking.price}</p>
     <p>Välkommen till SMTC Ekeberg! Hör av dig om du har några frågor
     innan din vistelse.</p>
-    <p>Hälsningar,<br>SMTC Ekeberg<br><br>
-    Fredric Askerup, Lic Medicinsk tränare, vid Stenebys Medicinska Träningscentrum (SMTC).<br>
-    <a href="tel:+46739133177">+46 73 913 31 77</a><br>
-    <a href="mailto:fredricaskerup@gmail.com">fredricaskerup@gmail.com</a><br>
-    <a href="https://www.google.com/maps/place/Ekeberg/@58.9294654,12.1894925,15z/data=!3m1!4b1!4m6!3m5!1s0x46448d0027628527:0x1288809db24e27fd!8m2!3d58.9294658!4d12.1997708!16s%2Fg%2F11njn0t886?entry=ttu&g_ep=EgoyMDI2MDcyOS4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer">
-    Taxviken Ekeberg 1, 66694 Dals Långed, Sverige</a><br>
-    <a href="https://www.smtc.se/">smtc.se</a>
-    </p>
+    ${SIGNATURE}
   `;
   await sendEmail(
     booking,
     "Betalning mottagen — din bokning hos SMTC Ekeberg är klar",
+    html
+  );
+}
+
+// Sent when Fredric changes Status to "cancelled". Releases the dates and
+// lets the guest know — mentions a refund only in passing, since whether
+// anything was actually paid varies booking to booking; the real refund
+// conversation (if any) happens separately/directly with Fredric.
+async function sendCancelledEmail(booking) {
+  const html = `
+    <p>Hej ${booking.name}!</p>
+    <p>Din bokning hos SMTC Ekeberg har tyvärr blivit <strong>avbokad</strong>:</p>
+    <p><strong>Paket:</strong> ${booking.package}<br>
+    <strong>Datum:</strong> ${booking.startDate} till ${booking.endDate}</p>
+    <p>Dina datum är nu frisläppta igen. Om du redan hunnit betala hör vi
+    av oss separat gällande återbetalning.</p>
+    <p>Har du frågor, eller vill du boka nya datum? Hör gärna av dig så
+    hjälper vi dig vidare.</p>
+    ${SIGNATURE}
+  `;
+  await sendEmail(
+    booking,
+    "Din bokning hos SMTC Ekeberg är avbokad",
     html
   );
 }
@@ -130,8 +154,8 @@ module.exports = async (req, res) => {
 
   try {
     const row = Number(req.body && req.body.row);
-    const event = req.body && req.body.event; // "confirmed" | "paid"
-    if (!row || !["confirmed", "paid"].includes(event)) {
+    const event = req.body && req.body.event; // "confirmed" | "paid" | "cancelled"
+    if (!row || !["confirmed", "paid", "cancelled"].includes(event)) {
       res.status(400).json({ error: "Missing/invalid row or event" });
       return;
     }
@@ -151,13 +175,19 @@ module.exports = async (req, res) => {
         return;
       }
       await sendApprovedEmail(booking);
-    } else {
-      // event === "paid"
+    } else if (event === "paid") {
       if (status !== "confirmed" || !booking.paid) {
         res.status(200).json({ ok: true, skipped: "not confirmed+paid" });
         return;
       }
       await sendPaidEmail(booking);
+    } else {
+      // event === "cancelled"
+      if (status !== "cancelled") {
+        res.status(200).json({ ok: true, skipped: "status no longer cancelled" });
+        return;
+      }
+      await sendCancelledEmail(booking);
     }
 
     res.status(200).json({ ok: true });
