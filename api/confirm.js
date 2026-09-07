@@ -83,7 +83,7 @@ async function sendApprovedEmail(booking) {
     Faktura eller Företagsswish, innan ankomst — om inget annat
     överenskommits. Moms med 6% ingår för privatpersoner, men läggs på
     över totalsumman för företag.<br><br>
-    <strong>Swish till Fredric Askerup:</strong> <a href="tel:+46739133177">+46 73 913 31 77</a><br><br>
+    <strong>Swish till Medicinsk PT Askerup:”</strong> <a href="tel:+123 171 08 39">123 171 08 39</a><br><br>
     För betalningar från utlandet går det bra med PayPal (sök på Fredric
     Askerup, eller användarnamnet fredricaskerup).</p>
     <p>Så snart betalningen är registrerad hos oss skickar vi en sista
